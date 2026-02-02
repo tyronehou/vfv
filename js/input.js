@@ -12,6 +12,7 @@ export class InputHandler {
         this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
         window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
         window.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+        this.canvas.addEventListener('dblclick', (e) => this.handleDoubleClick(e));
     }
 
     getPos(e) {
@@ -77,5 +78,14 @@ export class InputHandler {
     handleMouseUp(e) {
         this.isDragging = false;
         this.draggedCharge = null;
+    }
+
+    handleDoubleClick(e) {
+        const pos = this.getPos(e);
+        const charge = this.app.getChargeAt(pos.x, pos.y);
+
+        if (charge) {
+            this.app.removeCharge(charge);
+        }
     }
 }

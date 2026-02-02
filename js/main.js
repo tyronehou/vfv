@@ -41,6 +41,20 @@ class App {
         this.render();
     }
 
+    removeCharge(charge) {
+        const index = this.charges.indexOf(charge);
+        if (index > -1) {
+            this.charges.splice(index, 1);
+            if (this.selectedCharge === charge) {
+                this.deselectCharge();
+            }
+            if (this.hoveredCharge === charge) {
+                this.hoveredCharge = null;
+            }
+            this.render();
+        }
+    }
+
     getChargeAt(x, y) {
         // Find charge within reasonable hit radius (e.g. 20px)
         const hitRadius = 20;
