@@ -8,7 +8,12 @@ export class Renderer {
         this.gridSpacing = 40; // Spacing in pixels
         this.arrowScale = 1.0;
         this.fieldThreshold = 0.1; // Minimum magnitude to draw
+        this.fieldThreshold = 0.1; // Minimum magnitude to draw
         this.showHeatmap = false;
+
+        // New Visualization Settings
+        this.visualizationMode = 'vector'; // 'vector' or 'lines'
+        this.lineDensity = 8; // Lines per charge
 
         this.width = 0;
         this.height = 0;
@@ -38,7 +43,11 @@ export class Renderer {
             this.drawHeatmap(charges);
         }
 
-        this.drawGrid(charges);
+        if (this.visualizationMode === 'lines') {
+            this.drawFieldLines(charges);
+        } else {
+            this.drawGrid(charges);
+        }
         this.drawCharges(charges, hoveredCharge, selectedCharge);
     }
 
@@ -130,6 +139,75 @@ export class Renderer {
             // Optional: Show magnitude text if > 1
             if (Math.abs(c.q) > 1) {
                 this.ctx.fillText(Math.abs(c.q), c.x, c.y + radius + 12);
+            }
+        }
+    }
+
+    drawFieldLines(charges) {
+        console.log("Drawing field lines");
+        this.ctx.strokeStyle = '#6c757d'; // Grey for field lines
+        this.ctx.lineWidth = 1;
+
+        const stepSize = 5;
+        const maxSteps = 500; // Limit line length to prevent infinite loops
+
+        for (const c of charges) {
+            // Determine trace direction: Positive -> Downstream (+E), Negative -> Upstream (-E)
+            let direction = c.q > 0 ? 1 : -1;
+
+            // Number of lines depends on charge magnitude? Or fixed density?
+            // User requested "regular angles". Let's use fixed count for now, or scaled by q?
+            // "Each charge" implies per-charge source.
+            // Let's use the UI setting this.lineDensity
+
+            const count = this.lineDensity;
+
+            for (let i = 0; i < count; i++) {
+                const angle = (Math.PI * 2 * i) / count;
+
+                // Start slightly offset from the center to avoid singularity
+                let x = c.x + Math.cos(angle) * 10;
+                let y = c.y + Math.sin(angle) * 10;
+
+                this.ctx.beginPath();
+                this.ctx.moveTo(x, y);
+
+                for (let s = 0; s < maxSteps; s++) {
+                    const field = this.physics.calculateField(x, y, charges);
+
+                    if (field.magnitude === 0) {
+                        break; // Should not happen often
+                    }
+                    // Normalize field vector for uniform step size (trace path, not strength)
+                    // We want the SHAPE of the line, so we follow unit vector.
+                    const len = Math.sqrt(field.vx * field.vx + field.vy * field.vy);
+                    const vx = (field.vx / len) * direction;
+                    const vy = (field.vy / len) * direction;
+
+                    x += vx * stepSize;
+                    y += vy * stepSize;
+
+                    this.ctx.lineTo(x, y);
+
+                    // Stop if out of bounds
+                    if (x < 0 || x > this.width || y < 0 || y > this.height) {
+                        break;
+                    }
+
+                    // Stop if too close to another charge (sink)
+                    // Simple check: distance to all charges
+                    let hitCharge = false;
+                    for (const other of charges) {
+                        const dx = x - other.x;
+                        const dy = y - other.y;
+                        if (dx * dx + dy * dy < 100) { // radius squared < 10^2
+                            hitCharge = true;
+                            break;
+                        }
+                    }
+                    if (hitCharge) break;
+                }
+                this.ctx.stroke();
             }
         }
     }

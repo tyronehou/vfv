@@ -21,7 +21,7 @@ export class Physics {
             const dist = Math.sqrt(distSq);
 
             // Avoid division by zero and singularity issues for visualization
-            if (dist < 10) continue;
+            if (dist < 0.01) continue;
 
             // E = k * q / r^2
             // Vector components: Ex = E * (dx/r), Ey = E * (dy/r)

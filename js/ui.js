@@ -21,6 +21,16 @@ export class UI {
         this.valStrength = document.getElementById('val-strength');
         this.groupStrength = document.getElementById('strength-control-group');
 
+        // View Mode Tabs
+        this.tabVector = document.getElementById('tab-vector');
+        this.tabLines = document.getElementById('tab-lines');
+        this.controlsVector = document.getElementById('controls-vector');
+        this.controlsLines = document.getElementById('controls-lines');
+
+        // Line Config
+        this.sliderLines = document.getElementById('line-density');
+        this.valLines = document.getElementById('val-lines');
+
         this.init();
     }
 
@@ -109,6 +119,25 @@ export class UI {
             this.app.clearCharges();
         });
 
+        // View Mode Switching
+        this.tabVector.addEventListener('click', () => {
+            this.setMode('vector');
+            this.renderer.visualizationMode = 'vector';
+            this.app.requestRender();
+        });
+
+        this.tabLines.addEventListener('click', () => {
+            this.setMode('lines');
+            this.renderer.visualizationMode = 'lines';
+            this.app.requestRender();
+        });
+
+        // Line Density
+        bindInput(this.sliderLines, this.valLines, (val) => {
+            this.renderer.lineDensity = parseInt(val);
+            this.app.requestRender();
+        });
+
         // Initial state
         // Initial state
         this.updateSelectionMode(null);
@@ -166,6 +195,20 @@ export class UI {
         } else {
             this.btnPos.classList.remove('active');
             this.btnNeg.classList.add('active');
+        }
+    }
+
+    setMode(mode) {
+        if (mode === 'vector') {
+            this.tabVector.classList.add('active');
+            this.tabLines.classList.remove('active');
+            this.controlsVector.style.display = 'block';
+            this.controlsLines.style.display = 'none';
+        } else {
+            this.tabVector.classList.remove('active');
+            this.tabLines.classList.add('active');
+            this.controlsVector.style.display = 'none';
+            this.controlsLines.style.display = 'block';
         }
     }
 }
