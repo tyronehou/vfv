@@ -1,0 +1,139 @@
+:root {
+    /* Colors - Light Theme / Scientific */
+    --bg-color: #f8f9fa;
+    --text-color: #212529;
+    --ui-bg: rgba(255, 255, 255, 0.9);
+    --ui-border: #dee2e6;
+    --accent-pos: #dc3545;
+    --accent-neg: #007bff;
+    --primary-color: #212529;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    overflow: hidden;
+    /* Prevent scrollbars */
+}
+
+#fieldCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+    border: 2px solid var(--text-color);
+}
+
+#ui-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 300px;
+    background: var(--ui-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--ui-border);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+h1 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--ui-border);
+    padding-bottom: 10px;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+label {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.toggle-group {
+    display: flex;
+    gap: 10px;
+}
+
+button {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--ui-border);
+    background: white;
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+button:hover {
+    background: #f1f3f5;
+}
+
+button.active {
+    font-weight: 600;
+    border-color: transparent;
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+#btn-pos.active {
+    background-color: var(--accent-pos);
+}
+
+#btn-neg.active {
+    background-color: var(--accent-neg);
+}
+
+.checkbox-label {
+    flex-direction: row;
+    align-items: center;
+    cursor: pointer;
+}
+
+input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+#btn-clear {
+    background-color: #fff;
+    color: #495057;
+    border: 1px solid #ced4da;
+    margin-top: 10px;
+}
+
+#btn-clear:hover {
+    background-color: #e9ecef;
+    color: #c92a2a;
+    border-color: #c92a2a;
+}
+
+.instructions {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: #6c757d;
+    background: #e9ecef;
+    padding: 8px;
+    border-radius: 6px;
+}
