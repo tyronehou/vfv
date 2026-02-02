@@ -75,11 +75,18 @@ export class Renderer {
 
         const maxLength = this.gridSpacing * 0.8 * this.arrowScale;
 
-        // Logarithmic scaling for better visibility across dynamic ranges
-        // Visualization trick: E varies by 1/r^2, dynamic range is huge. 
-        // We compress the length visually.
-        let len = Math.log(magnitude + 1) * 10 * this.arrowScale;
-        if (len > maxLength) len = maxLength;
+        let len;
+        if (this.showHeatmap) {
+            // Uniform length for direction only when heatmap is showing magnitude
+            // Use 60% of grid spacing as base length, scaled by user setting
+            len = this.gridSpacing * 0.3 * this.arrowScale;
+        } else {
+            // Logarithmic scaling for standard view
+            // Visualization trick: E varies by 1/r^2, dynamic range is huge. 
+            // We compress the length visually.
+            len = Math.log(magnitude + 1) * 10 * this.arrowScale;
+            if (len > maxLength) len = maxLength;
+        }
 
         // Angle
         const angle = Math.atan2(vy, vx);
