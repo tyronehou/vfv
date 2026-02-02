@@ -136,10 +136,9 @@ export class Renderer {
             this.ctx.textBaseline = 'middle';
             this.ctx.fillText(c.q > 0 ? '+' : '-', c.x, c.y);
 
-            // Optional: Show magnitude text if > 1
-            if (Math.abs(c.q) > 1) {
-                this.ctx.fillText(Math.abs(c.q), c.x, c.y + radius + 12);
-            }
+            // Show magnitude text below charge
+            this.ctx.fillStyle = 'black';
+            this.ctx.fillText(Math.abs(c.q), c.x, c.y + radius + 12);
         }
     }
 
