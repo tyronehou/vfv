@@ -19,6 +19,7 @@ export class UI {
 
         this.sliderStrength = document.getElementById('charge-strength');
         this.valStrength = document.getElementById('val-strength');
+        this.groupStrength = document.getElementById('strength-control-group');
 
         this.init();
     }
@@ -107,6 +108,10 @@ export class UI {
         this.btnClear.addEventListener('click', () => {
             this.app.clearCharges();
         });
+
+        // Initial state
+        // Initial state
+        this.updateSelectionMode(null);
     }
 
     updateSelectionMode(charge) {
@@ -131,6 +136,9 @@ export class UI {
             this.valStrength.value = magnitude;
             this.resizeInput(this.valStrength);
 
+            // Show strength controls
+            if (this.groupStrength) this.groupStrength.style.display = 'block';
+
         } else {
             // Add Mode
             title.textContent = 'Add Charge';
@@ -140,6 +148,9 @@ export class UI {
             this.sliderStrength.value = this.app.currentChargeValue; // Reset slider
             this.valStrength.value = this.app.currentChargeValue;
             this.resizeInput(this.valStrength);
+
+            // Hide strength controls
+            if (this.groupStrength) this.groupStrength.style.display = 'none';
         }
     }
 

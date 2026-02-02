@@ -98,6 +98,17 @@ export class Renderer {
             // Visual size based on magnitude
             const radius = 10 + Math.sqrt(Math.abs(c.q)) * 2;
 
+            // Selection or Hover Effect: Outer ring matching charge color
+            // If selected OR hovered, show the ring.
+            if (c === selectedCharge || c === hoveredCharge) {
+                this.ctx.beginPath();
+                this.ctx.arc(c.x, c.y, radius + 4, 0, Math.PI * 2);
+                this.ctx.strokeStyle = c.q > 0 ? this.colors.pos : this.colors.neg;
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+                this.ctx.lineWidth = 1;
+            }
+
             this.ctx.beginPath();
             this.ctx.arc(c.x, c.y, radius, 0, Math.PI * 2);
             this.ctx.fillStyle = c.q > 0 ? this.colors.pos : this.colors.neg;
@@ -107,26 +118,7 @@ export class Renderer {
             this.ctx.stroke();
             this.ctx.lineWidth = 1;
 
-            // Hover Effect: Outer ring matching charge color
-            // ONLY if not selected (selection takes precedence or adds to it)
-            if (c === hoveredCharge && c !== selectedCharge) {
-                this.ctx.beginPath();
-                this.ctx.arc(c.x, c.y, radius + 4, 0, Math.PI * 2);
-                this.ctx.strokeStyle = c.q > 0 ? this.colors.pos : this.colors.neg;
-                this.ctx.lineWidth = 2;
-                this.ctx.stroke();
-                this.ctx.lineWidth = 1;
-            }
 
-            // Selection Effect: Golden/Glowing ring
-            if (c === selectedCharge) {
-                this.ctx.beginPath();
-                this.ctx.arc(c.x, c.y, radius + 6, 0, Math.PI * 2);
-                this.ctx.strokeStyle = '#ffc107'; // Gold
-                this.ctx.lineWidth = 3;
-                this.ctx.stroke();
-                this.ctx.lineWidth = 1;
-            }
 
             // Text symbol
             this.ctx.fillStyle = 'white';
