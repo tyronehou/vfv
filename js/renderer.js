@@ -175,6 +175,9 @@ export class Renderer {
                 let x = c.x + Math.cos(angle) * 10;
                 let y = c.y + Math.sin(angle) * 10;
 
+                const path = [];
+                path.push({ x, y });
+
                 this.ctx.beginPath();
                 this.ctx.moveTo(x, y);
 
@@ -193,6 +196,7 @@ export class Renderer {
                     x += vx * stepSize;
                     y += vy * stepSize;
 
+                    path.push({ x, y });
                     this.ctx.lineTo(x, y);
 
                     // Stop if out of bounds
@@ -214,6 +218,30 @@ export class Renderer {
                     if (hitCharge) break;
                 }
                 this.ctx.stroke();
+
+                // Draw arrow halfway
+                if (path.length > 2) {
+                    const midIndex = Math.floor(path.length / 2);
+                    const p1 = path[midIndex];
+                    const p2 = path[midIndex + 1] || path[midIndex]; // Point ahead
+
+                    // Angle for arrow
+                    // If negative charge, we traced UPSTREAM (away from charge),
+                    // so the path goes against the field.
+                    // We want arrow to point ALONG the field (towards charge).
+                    const dx = p2.x - p1.x;
+                    const dy = p2.y - p1.y;
+                    let angle = c.q > 0 ? Math.atan2(dy, dx) : Math.atan2(-dy, -dx);
+
+                    const headLen = 6;
+                    this.ctx.fillStyle = '#6c757d';
+                    this.ctx.beginPath();
+                    // Draw triangle arrow
+                    this.ctx.moveTo(p1.x + headLen * Math.cos(angle), p1.y + headLen * Math.sin(angle));
+                    this.ctx.lineTo(p1.x - headLen * Math.cos(angle - Math.PI / 6), p1.y - headLen * Math.sin(angle - Math.PI / 6));
+                    this.ctx.lineTo(p1.x - headLen * Math.cos(angle + Math.PI / 6), p1.y - headLen * Math.sin(angle + Math.PI / 6));
+                    this.ctx.fill();
+                }
             }
         }
     }

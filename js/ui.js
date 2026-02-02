@@ -15,6 +15,7 @@ export class UI {
         this.valScale = document.getElementById('val-scale');
 
         this.checkHeatmap = document.getElementById('show-heatmap');
+        this.controlsHeatmap = document.getElementById('controls-heatmap');
         this.btnClear = document.getElementById('btn-clear');
 
         this.sliderStrength = document.getElementById('charge-strength');
@@ -204,11 +205,13 @@ export class UI {
             this.tabLines.classList.remove('active');
             this.controlsVector.style.display = 'block';
             this.controlsLines.style.display = 'none';
+            if (this.controlsHeatmap) this.controlsHeatmap.style.display = 'flex';
         } else {
             this.tabVector.classList.remove('active');
             this.tabLines.classList.add('active');
             this.controlsVector.style.display = 'none';
             this.controlsLines.style.display = 'block';
+            if (this.controlsHeatmap) this.controlsHeatmap.style.display = 'none';
         }
     }
 }
