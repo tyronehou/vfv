@@ -137,3 +137,39 @@ input[type="checkbox"] {
     padding: 8px;
     border-radius: 6px;
 }
+
+.num-input {
+    width: auto;
+    min-width: 30px;
+    padding: 2px 4px;
+    border: 1px solid transparent;
+    background: transparent;
+    border-radius: 4px;
+    font-size: 1em;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0 4px;
+    transition: all 0.2s ease;
+    text-align: left;
+    -moz-appearance: textfield;
+    /* Remove spinner buttons for cleaner look */
+}
+
+/* Remove spinner buttons in Chrome/Safari/Edge */
+.num-input::-webkit-outer-spin-button,
+.num-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.num-input:hover {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: #dee2e6;
+}
+
+.num-input:focus {
+    background: white;
+    border-color: var(--accent-neg);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    outline: none;
+}

@@ -20,20 +20,27 @@
                 <button id="btn-pos" class="active" data-type="1">+ Positive</button>
                 <button id="btn-neg" data-type="-1">- Negative</button>
             </div>
+
+            <label for="charge-strength" style="margin-top: 10px;">Strength: <input type="number" id="val-strength"
+                    value="1" min="1" max="10" class="num-input">uC</label>
+            <input type="range" id="charge-strength" min="1" max="10" step="1" value="1">
         </div>
 
         <div class="control-group">
-            <label for="grid-density">Grid Spacing: <span id="val-density">40</span>px</label>
-            <input type="range" id="grid-density" min="10" max="100" value="40">
+            <label for="grid-density">Grid Spacing: <input type="number" id="val-density" value="40"
+                    class="num-input">px</label>
+            <input type="range" id="grid-density" min="5" max="100" value="40">
         </div>
 
         <div class="control-group">
-            <label for="field-threshold">Min Field Strength: <span id="val-threshold">0.1</span></label>
+            <label for="field-threshold">Min Field Strength: <input type="number" id="val-threshold" value="0.1"
+                    step="0.05" class="num-input"></label>
             <input type="range" id="field-threshold" min="0" max="2" step="0.05" value="0.1">
         </div>
 
         <div class="control-group">
-            <label for="arrow-scale">Vector Scale: <span id="val-scale">1.0</span>x</label>
+            <label for="arrow-scale">Vector Scale: <input type="number" id="val-scale" value="1.0" step="0.1"
+                    class="num-input">x</label>
             <input type="range" id="arrow-scale" min="0.1" max="3" step="0.1" value="1.0">
         </div>
 

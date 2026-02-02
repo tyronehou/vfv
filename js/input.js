@@ -33,8 +33,24 @@ export class InputHandler {
         if (existingCharge) {
             this.isDragging = true;
             this.draggedCharge = existingCharge;
+            this.app.selectCharge(existingCharge);
         } else {
-            this.app.addCharge(pos.x, pos.y);
+            // If clicking empty space...
+            // 1. If we have a selection, deselect it?
+            // 2. OR always add a new charge?
+            // "Standard" behavior: Click off -> Deselect using the same click? OR Add?
+            // Let's go with: Click empty -> Add new charge (and select it). 
+            // To just deselect, maybe a dedicated button or key? 
+            // user: "Clicking empty space deselects the charge" in proposal 1.
+            // BUT "Add new charge" interaction is "Click on canvas". 
+            // Conflict!
+            // Resolution: If selected, click off -> deselect ONLY. If NOT selected -> Add.
+
+            if (this.app.selectedCharge) {
+                this.app.deselectCharge();
+            } else {
+                this.app.addCharge(pos.x, pos.y);
+            }
         }
     }
 

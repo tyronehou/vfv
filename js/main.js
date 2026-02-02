@@ -8,12 +8,14 @@ class App {
         this.canvas = document.getElementById('fieldCanvas');
         this.charges = [];
         this.currentChargeType = 1; // 1 for pos, -1 for neg
+        this.currentChargeValue = 1;
         this.hoveredCharge = null;
+        this.selectedCharge = null;
 
         this.physics = new Physics();
         this.renderer = new Renderer(this.canvas, this.physics);
-        this.input = new InputHandler(this.canvas, this);
         this.ui = new UI(this, this.renderer);
+        this.input = new InputHandler(this.canvas, this);
 
         this.init();
     }
@@ -29,7 +31,8 @@ class App {
     }
 
     addCharge(x, y) {
-        this.charges.push({ x, y, q: this.currentChargeType });
+        const newCharge = { x, y, q: this.currentChargeType * this.currentChargeValue };
+        this.charges.push(newCharge);
         this.render();
     }
 
@@ -57,7 +60,19 @@ class App {
     }
 
     render() {
-        this.renderer.render(this.charges, this.hoveredCharge);
+        this.renderer.render(this.charges, this.hoveredCharge, this.selectedCharge);
+    }
+
+    selectCharge(charge) {
+        this.selectedCharge = charge;
+        this.ui.updateSelectionMode(charge);
+        this.render();
+    }
+
+    deselectCharge() {
+        this.selectedCharge = null;
+        this.ui.updateSelectionMode(null);
+        this.render();
     }
 }
 

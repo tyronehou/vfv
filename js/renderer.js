@@ -31,7 +31,7 @@ export class Renderer {
         this.canvas.height = this.height;
     }
 
-    render(charges, hoveredCharge) {
+    render(charges, hoveredCharge, selectedCharge) {
         this.ctx.clearRect(0, 0, this.width, this.height);
 
         if (this.showHeatmap) {
@@ -39,7 +39,7 @@ export class Renderer {
         }
 
         this.drawGrid(charges);
-        this.drawCharges(charges, hoveredCharge);
+        this.drawCharges(charges, hoveredCharge, selectedCharge);
     }
 
     drawGrid(charges) {
@@ -93,7 +93,7 @@ export class Renderer {
         this.ctx.fill();
     }
 
-    drawCharges(charges, hoveredCharge) {
+    drawCharges(charges, hoveredCharge, selectedCharge) {
         for (const c of charges) {
             // Visual size based on magnitude
             const radius = 10 + Math.sqrt(Math.abs(c.q)) * 2;
@@ -108,11 +108,22 @@ export class Renderer {
             this.ctx.lineWidth = 1;
 
             // Hover Effect: Outer ring matching charge color
-            if (c === hoveredCharge) {
+            // ONLY if not selected (selection takes precedence or adds to it)
+            if (c === hoveredCharge && c !== selectedCharge) {
                 this.ctx.beginPath();
                 this.ctx.arc(c.x, c.y, radius + 4, 0, Math.PI * 2);
                 this.ctx.strokeStyle = c.q > 0 ? this.colors.pos : this.colors.neg;
                 this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+                this.ctx.lineWidth = 1;
+            }
+
+            // Selection Effect: Golden/Glowing ring
+            if (c === selectedCharge) {
+                this.ctx.beginPath();
+                this.ctx.arc(c.x, c.y, radius + 6, 0, Math.PI * 2);
+                this.ctx.strokeStyle = '#ffc107'; // Gold
+                this.ctx.lineWidth = 3;
                 this.ctx.stroke();
                 this.ctx.lineWidth = 1;
             }
