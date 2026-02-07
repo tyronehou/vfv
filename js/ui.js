@@ -211,6 +211,14 @@ export class UI {
             };
             this.inputEx.addEventListener('keydown', handleEnter);
             this.inputEy.addEventListener('keydown', handleEnter);
+
+            // Dynamic Resizing
+            this.inputEx.addEventListener('input', (e) => this.resizeInput(e.target));
+            this.inputEy.addEventListener('input', (e) => this.resizeInput(e.target));
+
+            // Initial resize
+            this.resizeInput(this.inputEx);
+            this.resizeInput(this.inputEy);
         }
 
         // Initial state
