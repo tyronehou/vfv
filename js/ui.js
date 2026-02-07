@@ -3,16 +3,25 @@ export class UI {
         this.app = app;
         this.renderer = renderer;
 
-        // Element refs
+        // Element refs - Shared/Charges
         this.btnPos = document.getElementById('btn-pos');
         this.btnNeg = document.getElementById('btn-neg');
-        this.sliderDensity = document.getElementById('grid-density');
-        this.sliderThreshold = document.getElementById('field-threshold');
-        this.sliderScale = document.getElementById('arrow-scale');
 
-        this.valDensity = document.getElementById('val-density');
+        // Charges Controls
+        this.sliderDensityCharges = document.getElementById('grid-density-charges');
+        this.valDensityCharges = document.getElementById('val-density-charges');
+        this.sliderScaleCharges = document.getElementById('arrow-scale-charges');
+        this.valScaleCharges = document.getElementById('val-scale-charges');
+
+        // Equation Controls
+        this.sliderDensityEquation = document.getElementById('grid-density-equation');
+        this.valDensityEquation = document.getElementById('val-density-equation');
+        this.sliderScaleEquation = document.getElementById('arrow-scale-equation');
+        this.valScaleEquation = document.getElementById('val-scale-equation');
+
+        // Shared/Misc
+        this.sliderThreshold = document.getElementById('field-threshold');
         this.valThreshold = document.getElementById('val-threshold');
-        this.valScale = document.getElementById('val-scale');
 
         this.checkHeatmap = document.getElementById('show-heatmap');
         this.controlsHeatmap = document.getElementById('controls-heatmap');
@@ -25,12 +34,26 @@ export class UI {
         // View Mode Tabs
         this.tabVector = document.getElementById('tab-vector');
         this.tabLines = document.getElementById('tab-lines');
-        this.controlsVector = document.getElementById('controls-vector');
+        this.controlsVectorCharges = document.getElementById('controls-vector-charges');
         this.controlsLines = document.getElementById('controls-lines');
+        this.divThreshold = document.getElementById('control-group-threshold');
 
         // Line Config
         this.sliderLines = document.getElementById('line-density');
         this.valLines = document.getElementById('val-lines');
+
+        // Main Tabs
+        this.tabCharges = document.getElementById('main-tab-charges');
+        this.tabEquation = document.getElementById('main-tab-equation');
+        this.contentCharges = document.getElementById('tab-content-charges');
+        this.contentEquation = document.getElementById('tab-content-equation');
+
+        // Equation Inputs
+        this.inputEx = document.getElementById('eq-ex');
+        this.inputEy = document.getElementById('eq-ey');
+        this.checkGrid = document.getElementById('show-grid-lines');
+        this.checkAxes = document.getElementById('show-axes');
+        this.btnUpdateEquation = document.getElementById('btn-update-equation');
 
         this.init();
     }
@@ -91,20 +114,32 @@ export class UI {
             }
         });
 
-        // Grid Density
-        bindInput(this.sliderDensity, this.valDensity, (val) => {
+        // Grid Density (Charges)
+        bindInput(this.sliderDensityCharges, this.valDensityCharges, (val) => {
             this.renderer.gridSpacing = parseInt(val);
             this.app.requestRender();
         });
 
-        // Field Threshold
+        // Grid Density (Equation)
+        bindInput(this.sliderDensityEquation, this.valDensityEquation, (val) => {
+            this.renderer.gridSpacing = val; // Float for units
+            this.app.requestRender();
+        });
+
+        // Field Threshold (Charges only effectively)
         bindInput(this.sliderThreshold, this.valThreshold, (val) => {
             this.renderer.fieldThreshold = val;
             this.app.requestRender();
         });
 
-        // Arrow Scale
-        bindInput(this.sliderScale, this.valScale, (val) => {
+        // Arrow Scale (Charges)
+        bindInput(this.sliderScaleCharges, this.valScaleCharges, (val) => {
+            this.renderer.arrowScale = val;
+            this.app.requestRender();
+        });
+
+        // Arrow Scale (Equation)
+        bindInput(this.sliderScaleEquation, this.valScaleEquation, (val) => {
             this.renderer.arrowScale = val;
             this.app.requestRender();
         });
@@ -139,9 +174,48 @@ export class UI {
             this.app.requestRender();
         });
 
-        // Initial state
+        // Main Tab Switching
+        this.tabCharges.addEventListener('click', () => {
+            this.setMainTab('charges');
+        });
+
+        this.tabEquation.addEventListener('click', () => {
+            this.setMainTab('equation');
+        });
+
+        // Grid & Axes Toggles
+        this.checkGrid.addEventListener('change', (e) => {
+            this.renderer.showGridLines = e.target.checked;
+            this.app.requestRender();
+        });
+
+        this.checkAxes.addEventListener('change', (e) => {
+            this.renderer.showAxes = e.target.checked;
+            this.app.requestRender();
+        });
+
+        // Equation Update
+        if (this.btnUpdateEquation) {
+            this.btnUpdateEquation.addEventListener('click', () => {
+                const ex = this.inputEx.value;
+                const ey = this.inputEy.value;
+                this.renderer.setEquation(ex, ey);
+                this.app.requestRender();
+            });
+
+            // Enter key support
+            const handleEnter = (e) => {
+                if (e.key === 'Enter') {
+                    this.btnUpdateEquation.click();
+                }
+            };
+            this.inputEx.addEventListener('keydown', handleEnter);
+            this.inputEy.addEventListener('keydown', handleEnter);
+        }
+
         // Initial state
         this.updateSelectionMode(null);
+        this.setMainTab('charges');
     }
 
     updateSelectionMode(charge) {
@@ -203,15 +277,56 @@ export class UI {
         if (mode === 'vector') {
             this.tabVector.classList.add('active');
             this.tabLines.classList.remove('active');
-            this.controlsVector.style.display = 'block';
+            if (this.controlsVectorCharges) this.controlsVectorCharges.style.display = 'block';
             this.controlsLines.style.display = 'none';
             if (this.controlsHeatmap) this.controlsHeatmap.style.display = 'flex';
         } else {
             this.tabVector.classList.remove('active');
             this.tabLines.classList.add('active');
-            this.controlsVector.style.display = 'none';
+            if (this.controlsVectorCharges) this.controlsVectorCharges.style.display = 'none';
             this.controlsLines.style.display = 'block';
             if (this.controlsHeatmap) this.controlsHeatmap.style.display = 'none';
         }
+    }
+
+    setMainTab(tab) {
+        if (tab === 'charges') {
+            this.tabCharges.classList.add('active');
+            this.tabEquation.classList.remove('active');
+            this.contentCharges.style.display = 'block';
+            this.contentEquation.style.display = 'none';
+            this.renderer.mode = 'charges';
+
+            // Restore sub-tab state
+            this.setMode(this.renderer.visualizationMode);
+
+            // Sync state from Charges controls
+            if (this.sliderDensityCharges) this.renderer.gridSpacing = parseInt(this.sliderDensityCharges.value);
+            if (this.sliderScaleCharges) this.renderer.arrowScale = parseFloat(this.sliderScaleCharges.value);
+
+            // Show threshold
+            if (this.divThreshold) this.divThreshold.style.display = 'block';
+
+        } else {
+            this.tabCharges.classList.remove('active');
+            this.tabEquation.classList.add('active');
+            this.contentCharges.style.display = 'none';
+            this.contentEquation.style.display = 'block';
+            this.renderer.mode = 'equation';
+
+            // Show appropriate controls for equation mode
+            // Reuse vector controls for now
+            // this.controlsVector.style.display = 'block'; // Removed
+            this.controlsLines.style.display = 'none';
+            if (this.controlsHeatmap) this.controlsHeatmap.style.display = 'flex';
+
+            // Hide threshold
+            if (this.divThreshold) this.divThreshold.style.display = 'none';
+
+            // Sync state from Equation controls
+            if (this.sliderDensityEquation) this.renderer.gridSpacing = parseFloat(this.sliderDensityEquation.value);
+            if (this.sliderScaleEquation) this.renderer.arrowScale = parseFloat(this.sliderScaleEquation.value);
+        }
+        this.app.requestRender();
     }
 }

@@ -6,6 +6,7 @@ export class Renderer {
 
         // Settings
         this.gridSpacing = 40; // Spacing in pixels
+        this.scale = 50; // Pixels per unit (for Equation mode)
         this.arrowScale = 1.0;
         this.fieldThreshold = 0.1; // Minimum magnitude to draw
         this.fieldThreshold = 0.1; // Minimum magnitude to draw
@@ -14,6 +15,16 @@ export class Renderer {
         // New Visualization Settings
         this.visualizationMode = 'vector'; // 'vector' or 'lines'
         this.lineDensity = 8; // Lines per charge
+
+        // Equation Mode Settings
+        this.mode = 'charges'; // 'charges' or 'equation'
+        this.equationEx = 'y';
+        this.equationEy = '-x';
+        this.showGridLines = true;
+        this.showAxes = true;
+        this.equationFnEx = null;
+        this.equationFnEy = null;
+        this.compileEquation();
 
         this.width = 0;
         this.height = 0;
@@ -29,6 +40,25 @@ export class Renderer {
         this.resize();
     }
 
+    setEquation(ex, ey) {
+        this.equationEx = ex;
+        this.equationEy = ey;
+        this.compileEquation();
+    }
+
+    compileEquation() {
+        try {
+            // Create function that takes x, y and Math functions
+            // We'll expose Math properties directly or destructure them
+            this.equationFnEx = new Function('x', 'y', 'Math', `with(Math) { return ${this.equationEx}; }`);
+            this.equationFnEy = new Function('x', 'y', 'Math', `with(Math) { return ${this.equationEy}; }`);
+        } catch (e) {
+            console.error("Invalid equation", e);
+            this.equationFnEx = () => 0;
+            this.equationFnEy = () => 0;
+        }
+    }
+
     resize() {
         this.width = window.innerWidth;
         this.height = window.innerHeight;
@@ -38,6 +68,11 @@ export class Renderer {
 
     render(charges, hoveredCharge, selectedCharge) {
         this.ctx.clearRect(0, 0, this.width, this.height);
+
+        if (this.mode === 'equation') {
+            this.drawEquationMode();
+            return;
+        }
 
         if (this.showHeatmap) {
             this.drawHeatmap(charges);
@@ -73,13 +108,18 @@ export class Renderer {
         // OR scale by magnitude (clamped) to show strength.
         // For standard field viz, we often clamp length.
 
-        const maxLength = this.gridSpacing * 0.8 * this.arrowScale;
+        let visualSpacing = this.gridSpacing;
+        if (this.mode === 'equation') {
+            visualSpacing = this.gridSpacing * this.scale;
+        }
+
+        const maxLength = visualSpacing * 0.8 * this.arrowScale;
 
         let len;
         if (this.showHeatmap) {
             // Uniform length for direction only when heatmap is showing magnitude
             // Use 60% of grid spacing as base length, scaled by user setting
-            len = this.gridSpacing * 0.3 * this.arrowScale;
+            len = visualSpacing * 0.3 * this.arrowScale;
         } else {
             // Logarithmic scaling for standard view
             // Visualization trick: E varies by 1/r^2, dynamic range is huge. 
@@ -111,12 +151,20 @@ export class Renderer {
 
     drawCharges(charges, hoveredCharge, selectedCharge) {
         for (const c of charges) {
-            // Visual size based on magnitude
-            const radius = 10 + Math.sqrt(Math.abs(c.q)) * 2;
+            const isSelected = c === selectedCharge;
+            const isHovered = c === hoveredCharge;
 
-            // Selection or Hover Effect: Outer ring matching charge color
-            // If selected OR hovered, show the ring.
-            if (c === selectedCharge || c === hoveredCharge) {
+            // Visual size based on magnitude
+            let radius = 10 + Math.sqrt(Math.abs(c.q)) * 2;
+
+            // Apply filter FIRST (affects both ring and body)
+            if (isSelected || isHovered) {
+                radius *= 1.15;
+                this.ctx.filter = 'brightness(1.5)';
+            }
+
+            // Selection Ring (Only when selected)
+            if (isSelected) {
                 this.ctx.beginPath();
                 this.ctx.arc(c.x, c.y, radius + 4, 0, Math.PI * 2);
                 this.ctx.strokeStyle = c.q > 0 ? this.colors.pos : this.colors.neg;
@@ -125,10 +173,16 @@ export class Renderer {
                 this.ctx.lineWidth = 1;
             }
 
+            // Draw Charge Body
             this.ctx.beginPath();
             this.ctx.arc(c.x, c.y, radius, 0, Math.PI * 2);
+
             this.ctx.fillStyle = c.q > 0 ? this.colors.pos : this.colors.neg;
             this.ctx.fill();
+
+            // Reset filter
+            this.ctx.filter = 'none';
+
             this.ctx.strokeStyle = 'white';
             this.ctx.lineWidth = 2;
             this.ctx.stroke();
@@ -271,6 +325,145 @@ export class Renderer {
                     this.ctx.fillRect(x, y, cellSize, cellSize);
                 }
             }
+        }
+    }
+
+    drawEquationMode() {
+        if (this.showGridLines) {
+            this.drawEquationGridLines();
+        }
+        if (this.showAxes) {
+            this.drawAxes();
+        }
+
+        // Draw Vector Field
+        this.ctx.strokeStyle = this.colors.vector;
+        this.ctx.fillStyle = this.colors.vector;
+
+        const centerX = this.width / 2;
+        const centerY = this.height / 2;
+        const scale = this.scale;
+
+        // In equation mode, gridSpacing is in UNITS (e.g. 1.0, 0.5)
+        // Convert to pixels for drawing loop
+        const stepPixels = this.gridSpacing * scale;
+
+        // Calculate start positions to ensure a grid point lands exactly on (centerX, centerY)
+        // We want x = centerX + n * stepPixels
+        // So find the smallest x > 0 that satisfies this.
+        const startX = (centerX % stepPixels);
+        const startY = (centerY % stepPixels);
+
+        for (let x = startX; x < this.width; x += stepPixels) {
+            for (let y = startY; y < this.height; y += stepPixels) {
+                // Convert to logical coordinates
+                // Cartesian standard: Y up is positive. Canvas: Y down is positive.
+                const lx = (x - centerX) / scale;
+                const ly = -(y - centerY) / scale;
+
+                let vx = 0, vy = 0;
+                try {
+                    vx = this.equationFnEx(lx, ly, Math);
+                    vy = this.equationFnEy(lx, ly, Math);
+                } catch (e) {
+                    // Ignore math errors in loop
+                }
+
+                // Check for validity
+                if (isNaN(vx) || isNaN(vy) || !isFinite(vx) || !isFinite(vy)) continue;
+
+                const magnitude = Math.sqrt(vx * vx + vy * vy);
+
+                // Flip vy back for canvas rendering (Logical Y+ is Up, Canvas Y+ is Down)
+                // If Ey is positive, it points UP. In canvas, that means y decreases.
+                // So canvas_vy should be -vy.
+                const cvy = -vy;
+
+                if (magnitude > 0.01) {
+                    this.drawArrow(x, y, vx, cvy, magnitude);
+                }
+            }
+        }
+    }
+
+    drawAxes() {
+        const centerX = this.width / 2;
+        const centerY = this.height / 2;
+        const scale = this.scale;
+
+        this.ctx.strokeStyle = '#000';
+        this.ctx.lineWidth = 2;
+        this.ctx.fillStyle = '#000';
+        this.ctx.font = '10px sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'top';
+
+        // X Axis
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, centerY);
+        this.ctx.lineTo(this.width, centerY);
+        this.ctx.stroke();
+
+        // X Axis Labels
+        for (let x = centerX; x < this.width; x += scale) {
+            this.ctx.beginPath(); this.ctx.moveTo(x, centerY - 3); this.ctx.lineTo(x, centerY + 3); this.ctx.stroke();
+            const val = (x - centerX) / scale;
+            if (val !== 0) this.ctx.fillText(val, x, centerY + 5);
+        }
+        for (let x = centerX; x > 0; x -= scale) {
+            this.ctx.beginPath(); this.ctx.moveTo(x, centerY - 3); this.ctx.lineTo(x, centerY + 3); this.ctx.stroke();
+            const val = (x - centerX) / scale;
+            if (val !== 0) this.ctx.fillText(val, x, centerY + 5);
+        }
+
+        // Y Axis
+        this.ctx.beginPath();
+        this.ctx.moveTo(centerX, 0);
+        this.ctx.lineTo(centerX, this.height);
+        this.ctx.stroke();
+
+        // Y Axis Labels
+        this.ctx.textAlign = 'right';
+        this.ctx.textBaseline = 'middle';
+        for (let y = centerY; y < this.height; y += scale) {
+            this.ctx.beginPath(); this.ctx.moveTo(centerX - 3, y); this.ctx.lineTo(centerX + 3, y); this.ctx.stroke();
+            const val = -(y - centerY) / scale; // Invert logic for label
+            if (val !== 0) this.ctx.fillText(val, centerX - 5, y);
+        }
+        for (let y = centerY; y > 0; y -= scale) {
+            this.ctx.beginPath(); this.ctx.moveTo(centerX - 3, y); this.ctx.lineTo(centerX + 3, y); this.ctx.stroke();
+            const val = -(y - centerY) / scale;
+            if (val !== 0) this.ctx.fillText(val, centerX - 5, y);
+        }
+
+        // Origin
+        this.ctx.fillText("0", centerX - 5, centerY + 5);
+
+        this.ctx.lineWidth = 1;
+    }
+
+    drawEquationGridLines() {
+        const centerX = this.width / 2;
+        const centerY = this.height / 2;
+        const scale = this.scale;
+
+        this.ctx.strokeStyle = '#e0e0e0';
+        this.ctx.lineWidth = 1;
+
+        // Vertical lines
+        for (let x = centerX; x < this.width; x += scale) {
+            this.ctx.beginPath(); this.ctx.moveTo(x, 0); this.ctx.lineTo(x, this.height); this.ctx.stroke();
+        }
+        for (let x = centerX; x > 0; x -= scale) {
+            this.ctx.beginPath(); this.ctx.moveTo(x, 0); this.ctx.lineTo(x, this.height); this.ctx.stroke();
+        }
+
+        // Horizontal lines
+        for (let y = centerY; y < this.height; y += scale) {
+            this.ctx.beginPath(); this.ctx.moveTo(0, y); this.ctx.lineTo(this.width, y); this.ctx.stroke();
+        }
+        for (let y = centerY; y > 0; y -= scale) {
+            this.ctx.beginPath(); this.ctx.moveTo(0, y); this.ctx.lineTo(this.width, y); this.ctx.stroke();
         }
     }
 }
